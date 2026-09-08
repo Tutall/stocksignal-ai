@@ -1,19 +1,16 @@
 generator client {
   provider = "prisma-client-js"
 }
-
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 model User {
-  id            String      @id @default(cuid())
-  email         String      @unique
-  passwordHash  String?
-  name          String?
-  watchlists    Watchlist[]
-  createdAt     DateTime    @default(now())
+  id         String      @id @default(cuid())
+  email      String      @unique
+  watchlists Watchlist[]
+  alerts     Alert[]
 }
 
 model Watchlist {
@@ -21,26 +18,33 @@ model Watchlist {
   userId    String
   ticker    String
   user      User     @relation(fields: [userId], references: [id])
-  createdAt DateTime @default(now())
-
-  @@unique([userId, ticker])
 }
 
+model Alert {
+  id        String   @id @default(cuid())
+  userId    String
+  ticker    String
+  condition String   // e.g., "PROB_UP_GT_80"
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+// 🧪 AI Track Record - Stores predictions to calculate historical accuracy
 model Prediction {
   id              String   @id @default(cuid())
   ticker          String
   predictedDate   DateTime @default(now())
   timeHorizonDays Int      // 1, 7, 30, 90
   
-  // AI Outputs
+  // Predictions
   probUp          Float
   probDown        Float
   probFlat        Float
   confidence      String
-  direction       String
+  
+  // Real Data (At time of prediction)
   priceAtPrediction Float
   
-  // Backtesting Verification
+  // Backtesting Resolution
   resolved        Boolean  @default(false)
   actualPrice     Float?
   actualReturn    Float?
