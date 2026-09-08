@@ -1,0 +1,48 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String      @id @default(cuid())
+  email         String      @unique
+  passwordHash  String?
+  name          String?
+  watchlists    Watchlist[]
+  createdAt     DateTime    @default(now())
+}
+
+model Watchlist {
+  id        String   @id @default(cuid())
+  userId    String
+  ticker    String
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@unique([userId, ticker])
+}
+
+model Prediction {
+  id              String   @id @default(cuid())
+  ticker          String
+  predictedDate   DateTime @default(now())
+  timeHorizonDays Int      // 1, 7, 30, 90
+  
+  // AI Outputs
+  probUp          Float
+  probDown        Float
+  probFlat        Float
+  confidence      String
+  direction       String
+  priceAtPrediction Float
+  
+  // Backtesting Verification
+  resolved        Boolean  @default(false)
+  actualPrice     Float?
+  actualReturn    Float?
+  wasCorrect      Boolean?
+}
